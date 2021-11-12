@@ -35,6 +35,7 @@ public class DMakerController {
 
     @PostMapping("/create-developer")
     public List<String> createDevelopers(
+            //request요청을받기위해사용
            @Valid @RequestBody CreateDeveloper.Request request
             ) {
         // GET /developers HTTP/1.1

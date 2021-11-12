@@ -13,7 +13,7 @@ public class DMakerException extends RuntimeException{
         this.dMakerErrorCode = errorCode;
         this.detailMessage = errorCode.getMessage();
     }
-    //에러코드와 상세메세지를 따로따로받아서 저장해줌
+    //에러코드와 상세메세지를 따로따로받아서 저장해준다.
     public DMakerException(DMakerErrorCode errorCode,String detailMessage){
         super(detailMessage);
         this.dMakerErrorCode = errorCode;
