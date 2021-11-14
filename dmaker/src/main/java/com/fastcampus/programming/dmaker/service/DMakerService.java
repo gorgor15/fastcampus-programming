@@ -2,20 +2,14 @@ package com.fastcampus.programming.dmaker.service;
 
 import com.fastcampus.programming.dmaker.dto.CreateDeveloper;
 import com.fastcampus.programming.dmaker.entity.Developer;
-import com.fastcampus.programming.dmaker.exception.DMakerErrorCode;
 import com.fastcampus.programming.dmaker.exception.DMakerException;
 import com.fastcampus.programming.dmaker.repository.DeveloperRepository;
 import com.fastcampus.programming.dmaker.type.DeveloperLevel;
-import com.fastcampus.programming.dmaker.type.DeveloperSkillType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 import javax.transaction.Transactional;
-import javax.validation.Valid;
-
-import java.util.Optional;
 
 import static com.fastcampus.programming.dmaker.exception.DMakerErrorCode.DUPLICATED_MEMBER_ID;
 import static com.fastcampus.programming.dmaker.exception.DMakerErrorCode.LEVEL_EXPERIENCE_YEAR_NOT_MATCHED;
@@ -35,16 +29,18 @@ public class DMakerService {
     // Durability 커밋이 됬다하면 커밋된이력은 남아있어야된다.(모든이력은 남아야된다.)
     //데이터베이스의 상태를 변경하는 작업 또는 한번에 수행되어야 하는 연산들을 의미한다.
     @Transactional
-    public void createDeveloper(CreateDeveloper.Request request) {
+    public CreateDeveloper.Response createDeveloper(CreateDeveloper.Request request) {
 
             validateCreateDeveloperRequest(request);
             //business logic start
             Developer developer = Developer.builder()
-                    .developerLevel(DeveloperLevel.JUNIOR)
-                    .developerSkillType(DeveloperSkillType.FRONT_END)
-                    .experienceYears(2)
-                    .name("Olaf")
-                    .age(25)
+                    //요청받은대로 저장이된다.
+                    .developerLevel(request.getDeveloperLevel())
+                    .developerSkillType(request.getDeveloperSkillType())
+                    .experienceYears(request.getExperienceYears())
+                    .memberId(request.getMemberId())
+                    .name(request.getName())
+                    .age(request.getAge())
                     .build();
 
             //데이터베이스 저장
@@ -55,6 +51,7 @@ public class DMakerService {
             // developerRepository.delete(developer1);
             //business logic end
 
+            return CreateDeveloper.Response.fromEntity(developer);
 
     }
     private void validateCreateDeveloperRequest(CreateDeveloper.Request request){

@@ -1,5 +1,6 @@
 package com.fastcampus.programming.dmaker.dto;
 
+import com.fastcampus.programming.dmaker.entity.Developer;
 import com.fastcampus.programming.dmaker.type.DeveloperLevel;
 import com.fastcampus.programming.dmaker.type.DeveloperSkillType;
 import lombok.*;
@@ -51,5 +52,16 @@ public class CreateDeveloper {
         private Integer experienceYears;
 
         private String memberId;
+
+        //값들을 하나씩 뽑아와서 바로 response 해준다.
+        public static Response fromEntity(Developer developer){
+            return Response.builder()
+                    .developerLevel(developer.getDeveloperLevel())
+                    .developerSkillType(developer.getDeveloperSkillType())
+                    .experienceYears(developer.getExperienceYears())
+                    .memberId(developer.getMemberId())
+                    .build();
+        }
+
     }
 }

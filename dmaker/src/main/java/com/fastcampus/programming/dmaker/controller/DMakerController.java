@@ -34,14 +34,14 @@ public class DMakerController {
     }
 
     @PostMapping("/create-developer")
-    public List<String> createDevelopers(
+    public CreateDeveloper.Response createDevelopers(
             //request요청을받기위해사용
-           @Valid @RequestBody CreateDeveloper.Request request
-            ) {
+            @Valid @RequestBody CreateDeveloper.Request request
+    ) {
         // GET /developers HTTP/1.1
-        log.info("request:{]",request);
+        log.info("request:{]", request);
 
-        dMakerService.createDeveloper(request);
-        return List.of("Olaf");
+        return dMakerService.createDeveloper(request);
+
     }
 }
