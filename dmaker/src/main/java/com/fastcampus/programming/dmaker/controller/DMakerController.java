@@ -1,13 +1,13 @@
 package com.fastcampus.programming.dmaker.controller;
 
 import com.fastcampus.programming.dmaker.dto.CreateDeveloper;
+import com.fastcampus.programming.dmaker.dto.DeveloperDTO;
+import com.fastcampus.programming.dmaker.dto.DeveloperDetatilDTO;
+import com.fastcampus.programming.dmaker.dto.UpdateDeveloper;
 import com.fastcampus.programming.dmaker.service.DMakerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.Arrays;
@@ -26,13 +26,34 @@ public class DMakerController {
     //              DMakerController(Bean)    DMakerService(Bean)   DeveloperRepository(Bean)
 //    ===============================Spring Application Context=================================
     @GetMapping("/developers")
-    public List<String> getAllDevelopers() {
+    public List<DeveloperDTO> getAllDevelopers() {
         // GET /developers HTTP/1.1
         log.info("GET /developers HTTP/1.1");
 
-        return Arrays.asList("Snow", "Elsa", "Olaf");
+        return dMakerService.getAllDevelopers();
     }
 
+    //상세정보 가져오기
+    @GetMapping("/developers/{memberId}")
+    public DeveloperDetatilDTO getAllDeveloperDetail(
+            @PathVariable String memberId
+    ) {
+        // GET /developers HTTP/1.1
+        log.info("GET /developers HTTP/1.1");
+
+        return dMakerService.getDeveloperDetail(memberId);
+    }
+
+    //수정하기
+    @PutMapping("/developers/{memberId}")
+    public DeveloperDetatilDTO UpdateDevelopers(
+            @PathVariable String memberId,
+            @Valid @RequestBody UpdateDeveloper.Request request
+    ){
+        log.info("GET /developers HTTP/1.1");
+
+       return dMakerService.UpdateDeveloper(memberId,request);
+    }
     @PostMapping("/create-developer")
     public CreateDeveloper.Response createDevelopers(
             //request요청을받기위해사용
