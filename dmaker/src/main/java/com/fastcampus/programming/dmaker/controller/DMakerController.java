@@ -10,7 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -30,7 +29,7 @@ public class DMakerController {
         // GET /developers HTTP/1.1
         log.info("GET /developers HTTP/1.1");
 
-        return dMakerService.getAllDevelopers();
+        return dMakerService.getAllEmployedDevelopers();
     }
 
     //상세정보 가져오기
@@ -54,6 +53,15 @@ public class DMakerController {
 
        return dMakerService.UpdateDeveloper(memberId,request);
     }
+    @DeleteMapping("/developers/{memberId}")
+    public DeveloperDetatilDTO deleteDevelopers(
+            @PathVariable String memberId
+    ){
+        return dMakerService.deleteDeveloper(memberId);
+    }
+
+
+
     @PostMapping("/create-developer")
     public CreateDeveloper.Response createDevelopers(
             //request요청을받기위해사용
