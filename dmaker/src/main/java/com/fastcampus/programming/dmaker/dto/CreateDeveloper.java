@@ -53,6 +53,7 @@ public class CreateDeveloper {
 
         private String memberId;
 
+
         //값들을 하나씩 뽑아와서 바로 response 해준다.
         public static Response fromEntity(Developer developer){
             return Response.builder()
