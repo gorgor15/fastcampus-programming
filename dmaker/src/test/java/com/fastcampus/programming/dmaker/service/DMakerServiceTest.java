@@ -11,6 +11,7 @@ import com.fastcampus.programming.dmaker.type.DeveloperLevel;
 import com.fastcampus.programming.dmaker.type.DeveloperSkillType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -23,6 +24,8 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -69,5 +72,34 @@ class DMakerServiceTest {
         assertEquals(DeveloperSkillType.BACK_END,developerDetatilDTO.getDeveloperSkillType());
         assertEquals(1,developerDetatilDTO.getExperienceYears());
     }
+    @Test
+    void createDeveloperTest_success(){
+        //given (moking 테스트에 활용될 지역변수)
+        CreateDeveloper.Request request = CreateDeveloper.Request.builder()
+                .developerLevel(DeveloperLevel.JUNIOR)
+                .developerSkillType(DeveloperSkillType.BACK_END)
+                .experienceYears(1)
+                .memberId("memberId")
+                .name("name")
+                .age(12)
+                .build();
+
+        given(developerRepository.findByMemberId(anyString()))
+                .willReturn(Optional.empty());
+        ArgumentCaptor<Developer> captor =
+                ArgumentCaptor.forClass(Developer.class);
+
+        //when (테스트하는동작 , 결과값 받아오는것)
+        CreateDeveloper.Response developer =  dMakerService.createDeveloper(request);
+        //then (assertion 우리가 예상한 동작대로 동작하는지)
+        verify(developerRepository,times(1))
+                .save(captor.capture());
+        Developer saveDeveloper = captor.getValue();
+        assertEquals(DeveloperLevel.SENIOR,saveDeveloper.getDeveloperLevel());
+        assertEquals(DeveloperSkillType.FRONT_END,saveDeveloper.getDeveloperSkillType());
+        assertEquals(12,saveDeveloper.getExperienceYears());
+    }
+
+
 
 }

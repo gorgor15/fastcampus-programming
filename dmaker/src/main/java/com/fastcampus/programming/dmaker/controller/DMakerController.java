@@ -37,7 +37,7 @@ public class DMakerController {
     //상세정보 가져오기
     @GetMapping("/developers/{memberId}")
     public DeveloperDetatilDTO getAllDeveloperDetail(
-            @PathVariable String memberId
+            @PathVariable final String memberId
     ) {
         // GET /developers HTTP/1.1
         log.info("GET /developers HTTP/1.1");
@@ -48,8 +48,8 @@ public class DMakerController {
     //수정하기
     @PutMapping("/developers/{memberId}")
     public DeveloperDetatilDTO UpdateDevelopers(
-            @PathVariable String memberId,
-            @Valid @RequestBody UpdateDeveloper.Request request
+            @PathVariable final String memberId,
+            @Valid @RequestBody final UpdateDeveloper.Request request
     ){
         log.info("GET /developers HTTP/1.1");
 
@@ -67,7 +67,7 @@ public class DMakerController {
     @PostMapping("/create-developer")
     public CreateDeveloper.Response createDevelopers(
             //request요청을받기위해사용
-            @Valid @RequestBody CreateDeveloper.Request request
+            @Valid @RequestBody final CreateDeveloper.Request request
     ) {
         // GET /developers HTTP/1.1
         log.info("request:{]", request);

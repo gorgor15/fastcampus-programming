@@ -1,5 +1,6 @@
 package com.fastcampus.programming.dmaker.service;
 
+import com.fastcampus.programming.dmaker.Constant.DMakerConstant;
 import com.fastcampus.programming.dmaker.code.StatusCode;
 import com.fastcampus.programming.dmaker.dto.CreateDeveloper;
 import com.fastcampus.programming.dmaker.dto.DeveloperDTO;
@@ -11,10 +12,10 @@ import com.fastcampus.programming.dmaker.exception.DMakerException;
 import com.fastcampus.programming.dmaker.repository.DeveloperRepository;
 import com.fastcampus.programming.dmaker.repository.RetiredDeveloperRepository;
 import com.fastcampus.programming.dmaker.type.DeveloperLevel;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -28,7 +29,7 @@ public class DMakerService {
     private final DeveloperRepository developerRepository;
     private final RetiredDeveloperRepository retiredDeveloperRepository;
     //디비를 추상화한 개념
-    private final EntityManager em;
+//    private final EntityManager em;
     // ACID
     // Atomic 은행에서 잘못송금되는것으로 생각
     // Consistency 커밋이 끝나는지점에서 끝나야된다. (잔고는 10000원있는데 송금하고 계좌는 0원보다 적을수없다)
@@ -40,31 +41,41 @@ public class DMakerService {
 
             validateCreateDeveloperRequest(request);
             //business logic start
-            Developer developer = Developer.builder()
-                    //요청받은대로 저장이된다.
-                    .developerLevel(request.getDeveloperLevel())
-                    .developerSkillType(request.getDeveloperSkillType())
-                    .experienceYears(request.getExperienceYears())
-                    .memberId(request.getMemberId())
-                    .statusCode(StatusCode.EMPLOYED)
-                    .name(request.getName())
-                    .age(request.getAge())
-                    .build();
 
             //데이터베이스 저장
             /* A->B 1만원 송금 */
             //A계좌에서 1만원 줄임
-            developerRepository.save(developer);
+
+
             //B계좌에서 1만원 늘림
             // developerRepository.delete(developer1);
             //business logic end
 
-            return CreateDeveloper.Response.fromEntity(developer);
+            return CreateDeveloper.Response.fromEntity(
+                    developerRepository.save(
+                            createDeveloperFromRequest(request)
+                    )
+            );
 
     }
-    private void validateCreateDeveloperRequest(CreateDeveloper.Request request){
 
-        validateDeveloperLevel(request.getExperienceYears(), request.getDeveloperLevel());
+    private Developer createDeveloperFromRequest(CreateDeveloper.Request request){
+        return Developer.builder()
+                //요청받은대로 저장이된다.
+                .developerLevel(request.getDeveloperLevel())
+                .developerSkillType(request.getDeveloperSkillType())
+                .experienceYears(request.getExperienceYears())
+                .memberId(request.getMemberId())
+                .statusCode(StatusCode.EMPLOYED)
+                .name(request.getName())
+                .age(request.getAge())
+                .build();
+    }
+    private void validateCreateDeveloperRequest(@NonNull CreateDeveloper.Request request){
+
+        request.getDeveloperLevel().validateExperienceYears(
+                request.getExperienceYears()
+        );
         developerRepository.findByMemberId(request.getMemberId())
               .ifPresent((developer ->{
                   throw new DMakerException(DUPLICATED_MEMBER_ID);
@@ -73,6 +84,7 @@ public class DMakerService {
     }
 
     //조회하기
+    @Transactional
     public List<DeveloperDTO> getAllEmployedDevelopers() {
         return developerRepository.findDevelopersByStatusCodeEquals(StatusCode.EMPLOYED)
                 .stream().map(DeveloperDTO::fromEntity)
@@ -80,54 +92,60 @@ public class DMakerService {
     }
     
     //상세보기
+    @Transactional
     public DeveloperDetatilDTO getDeveloperDetail(String memberId) {
-        return developerRepository.findByMemberId(memberId)
-                .map(DeveloperDetatilDTO::fromEntity)
-                .orElseThrow(()->new DMakerException(NO_DEVELOPER));
+        return DeveloperDetatilDTO.fromEntity(getDeveloperByMemberId(memberId));
     }
-
+    //get일땐 값이 있어야된다.
+    private Developer getDeveloperByMemberId(String memberId){
+       return developerRepository.findByMemberId(memberId).orElseThrow(
+                ()-> new DMakerException(NO_DEVELOPER));
+    }
     //수정하기
     @Transactional
-    public DeveloperDetatilDTO UpdateDeveloper(String memberId, UpdateDeveloper.Request request) {
-        validateUpdateDeveloperRequest(request,memberId);
-
-       Developer developer = developerRepository.findByMemberId(memberId).orElseThrow(
-                ()-> new DMakerException(NO_DEVELOPER)
+    public DeveloperDetatilDTO UpdateDeveloper(
+            String memberId, UpdateDeveloper.Request request
+    ) {
+        request.getDeveloperLevel().validateExperienceYears(
+                request.getExperienceYears()
         );
 
-       developer.setDeveloperLevel(request.getDeveloperLevel());
-       developer.setDeveloperSkillType(request.getDeveloperSkillType());
-       developer.setExperienceYears(request.getExperienceYears());
-
-       return DeveloperDetatilDTO.fromEntity(developer);
-    }
-
-    private void validateUpdateDeveloperRequest(
-            UpdateDeveloper.Request request,
-            String memberId
-            ) {
-
-        validateDeveloperLevel(
-                request.getExperienceYears(),
-                request.getDeveloperLevel()
+        return DeveloperDetatilDTO.fromEntity(
+                getUpdatedDeveloperFromRequest(request, getDeveloperByMemberId(memberId))
         );
-
     }
 
-    private void validateDeveloperLevel(Integer experienceYears, DeveloperLevel developerLevel) {
-        if (developerLevel == DeveloperLevel.SENIOR
-                && experienceYears < 10) {
-            throw new DMakerException(LEVEL_EXPERIENCE_YEAR_NOT_MATCHED);
-        }
+    private Developer getUpdatedDeveloperFromRequest(UpdateDeveloper.Request request, Developer developer) {
+        developer.setDeveloperLevel(request.getDeveloperLevel());
+        developer.setDeveloperSkillType(request.getDeveloperSkillType());
+        developer.setExperienceYears(request.getExperienceYears());
 
-        if (developerLevel == DeveloperLevel.JUNGNIOR
-                && (experienceYears < 4 || experienceYears > 10)) {
-            throw new DMakerException(LEVEL_EXPERIENCE_YEAR_NOT_MATCHED);
-        }
+        return developer;
+    }
 
-        if (developerLevel == DeveloperLevel.JUNIOR && experienceYears > 4) {
-            throw new DMakerException(LEVEL_EXPERIENCE_YEAR_NOT_MATCHED);
-        }
+    private void validateDeveloperLevel(DeveloperLevel developerLevel,Integer experienceYears) {
+
+        //리팩토링 3
+        developerLevel.validateExperienceYears(experienceYears);
+        //리팩토링 2
+//        if(experienceYears<developerLevel.getMinExperienceYears() ||
+//                experienceYears>developerLevel.getMaxExperienceYears()){
+//            throw new DMakerException(LEVEL_EXPERIENCE_YEAR_NOT_MATCHED);
+//        }
+        //리팩토링 1
+//        if (developerLevel == DeveloperLevel.SENIOR
+//                && experienceYears < DMakerConstant.MIN_SENIOR_EXPERIENCE_YEARS) {
+//            throw new DMakerException(LEVEL_EXPERIENCE_YEAR_NOT_MATCHED);
+//        }
+//
+//        if (developerLevel == DeveloperLevel.JUNGNIOR
+//                && (experienceYears < DMakerConstant.MAX_JUNIOR_EXPERIENCE_YEARS || experienceYears > DMakerConstant.MIN_SENIOR_EXPERIENCE_YEARS)) {
+//            throw new DMakerException(LEVEL_EXPERIENCE_YEAR_NOT_MATCHED);
+//        }
+//
+//        if (developerLevel == DeveloperLevel.JUNIOR && experienceYears > DMakerConstant.MAX_JUNIOR_EXPERIENCE_YEARS) {
+//            throw new DMakerException(LEVEL_EXPERIENCE_YEAR_NOT_MATCHED);
+//        }
     }
     //추후에 변화가능성을 열어뒀을때 Transactional 이용
     @Transactional
